@@ -173,6 +173,27 @@ class Database:
                 "SELECT 1 FROM all_courses LIMIT 1"
             ).fetchone() is not None
 
+    def list_courses(self) -> list[dict]:
+        """Return subscribed courses (those with locally-cached lectures)."""
+        with self._lock:
+            rows = self.conn.execute(
+                "SELECT course_id, title, teacher FROM courses ORDER BY title"
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def list_lecture_summaries(self, course_id: str) -> list[dict]:
+        """Lectures of ``course_id`` that have a non-empty summary."""
+        with self._lock:
+            rows = self.conn.execute(
+                """SELECT sub_id, sub_title, date, summary
+                   FROM lectures
+                   WHERE course_id = ?
+                     AND summary IS NOT NULL AND summary != ''
+                   ORDER BY date ASC, CAST(sub_id AS INTEGER) ASC""",
+                (course_id,),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
     def insert_lecture(
         self, sub_id: str, course_id: str, sub_title: str, date: str
     ) -> bool:

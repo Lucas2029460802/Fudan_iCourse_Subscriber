@@ -124,6 +124,9 @@ DATA_DIR = os.environ.get("DATA_DIR", "data")
 VIDEO_DIR = os.path.join(DATA_DIR, "videos")
 AUDIO_DIR = os.path.join(DATA_DIR, "audio")  # ffmpeg-decoded f32le scratch buffers
 DB_PATH = os.environ.get("DB_PATH", os.path.join(DATA_DIR, "icourse.db"))
+# Local staging dir for per-course Markdown; CI force-pushes this tree
+# to the Overview branch after each run.
+OVERVIEW_DIR = os.environ.get("OVERVIEW_DIR", "overview")
 
 # Sherpa-onnx ASR model directory.  Default: SenseVoice (zh+en+ja+ko+yue, int8).
 # ASR_MODEL_DIR is the new name; SENSEVOICE_MODEL_DIR is the legacy env var

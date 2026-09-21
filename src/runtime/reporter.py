@@ -309,6 +309,19 @@ class Reporter:
             print(f"[Email] Including {n} previously unsent lecture(s).",
                   flush=True)
 
+    def overview_written(self, n_courses: int, n_files: int):
+        with self._lock:
+            print(
+                f"\n[Overview] Wrote {n_files} lecture file(s) "
+                f"across {n_courses} course folder(s).",
+                flush=True,
+            )
+
+    def overview_failed(self):
+        with self._lock:
+            print("[Overview] Failed to write course folders.",
+                  flush=True)
+
     def info(self, msg: str):
         """Generic info line — escape hatch for one-off messages."""
         with self._lock:

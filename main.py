@@ -7,7 +7,7 @@ AudioDownloader.  This file does only orchestration:
   1. Build all components.
   2. Login + enumerate.
   3. Drive LectureRunner across the queued lectures.
-  4. Email + bookkeeping.
+  4. Email new summaries + write per-course Markdown (CI pushes Overview).
   5. Shutdown.
 
 Anything more interesting belongs in one of ``src/*`` modules.
@@ -21,6 +21,7 @@ from src.runtime import config
 from src.data.database import Database
 from src.api.emailer import Emailer
 from src.api.icourse import ICourseClient
+from src.api.overview import dump_from_db
 from src.pipeline.lecture_runner import LectureRunner
 from src.runtime.reporter import Reporter
 from src.runtime.scheduler import Scheduler
@@ -227,6 +228,20 @@ def _send_email(emailer: Emailer | None, db: Database, reporter: Reporter,
         traceback.print_exc()
 
 
+def _write_overview(db: Database, reporter: Reporter) -> None:
+    """Dump every summarized lecture into per-course folders.
+
+    CI then force-pushes that tree to the Overview branch.  A dump
+    failure must not abort the run — the database is already persisted.
+    """
+    try:
+        n_courses, n_files = dump_from_db(db, config.OVERVIEW_DIR)
+        reporter.overview_written(n_courses, n_files)
+    except Exception:
+        reporter.overview_failed()
+        traceback.print_exc()
+
+
 def _crawl_semester_catalog(client: ICourseClient, db: Database,
                             reporter: Reporter) -> None:
     """Auto-discover every available semester and refresh ``all_courses``.
@@ -314,6 +329,7 @@ def run():
     if not config.COURSE_IDS:
         # Crawl-only mode: nothing to process, just persist + exit.
         reporter.info("\n[Crawl-only mode] No COURSE_IDS — skipping lectures.")
+        _write_overview(db, reporter)
         reporter.run_footer()
         return
 
@@ -330,6 +346,7 @@ def run():
         scheduler.shutdown()
 
     _send_email(emailer, db, reporter, email_items)
+    _write_overview(db, reporter)
     reporter.run_footer()
 
 

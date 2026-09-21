@@ -3,6 +3,7 @@ __pycache__/
 .env
 data/*
 !data/icourse.db.enc
+overview/
 *.mp4
 *.wav
 tests/

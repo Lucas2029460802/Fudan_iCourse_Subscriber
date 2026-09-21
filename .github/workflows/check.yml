@@ -246,3 +246,9 @@ jobs:
           git commit -q -m "chore: update encrypted database (sharded v2)"
           git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
           git push --force origin data
+
+      - name: Publish summaries to Overview branch
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/deploy_overview.sh
