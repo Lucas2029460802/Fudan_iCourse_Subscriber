@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>课程笔记</title>
+  <link rel="stylesheet" href="/vendor/katex/katex.min.css">
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="side-head">
+        <div class="brand">课程笔记</div>
+        <input id="search" type="search" placeholder="搜索课次" autocomplete="off">
+      </div>
+      <nav id="nav" aria-label="课程目录"></nav>
+    </aside>
+    <main class="stage">
+      <header class="topbar">
+        <button id="menu" type="button" aria-label="打开目录">目录</button>
+        <div class="crumb" id="crumb">选择一节课</div>
+        <div class="pager">
+          <button id="prev" type="button">上一节</button>
+          <button id="next" type="button">下一节</button>
+        </div>
+      </header>
+      <article id="doc" class="doc">
+        <p class="placeholder">从左侧选择一节课。流水线还在写入时，新课次会自动出现在目录里。</p>
+      </article>
+    </main>
+  </div>
+  <script src="/vendor/katex/katex.min.js"></script>
+  <script src="/vendor/marked.min.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

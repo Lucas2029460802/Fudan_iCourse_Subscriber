@@ -1,0 +1,282 @@
+:root {
+  --ink: #1c1915;
+  --muted: #6b645b;
+  --paper: #f6f1e8;
+  --card: #fffdf8;
+  --line: #e4dccf;
+  --side: #24312b;
+  --side-ink: #f3eee4;
+  --side-muted: #b7c2b8;
+  --accent: #e7c27a;
+  --mark: #8c2f2f;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  height: 100%;
+  overflow: hidden;
+}
+
+.sidebar {
+  background: var(--side);
+  color: var(--side-ink);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.side-head {
+  padding: 22px 18px 12px;
+}
+
+.brand {
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  margin-bottom: 14px;
+}
+
+#search {
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  padding: 9px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--side-ink);
+  font: inherit;
+}
+
+#search::placeholder { color: var(--side-muted); }
+#search:focus { outline: 2px solid var(--accent); }
+
+#nav {
+  overflow: auto;
+  padding: 6px 10px 24px;
+}
+
+.course-name {
+  margin: 16px 8px 6px;
+  font-size: 13px;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+
+.course-name span {
+  color: var(--side-muted);
+  margin-left: 6px;
+}
+
+.lecture {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: var(--side-ink);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.45;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.lecture:hover { background: rgba(255, 255, 255, 0.06); }
+.lecture.active { background: rgba(231, 194, 122, 0.18); color: #fff; }
+
+.stage {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(246, 241, 232, 0.92);
+  position: sticky;
+  top: 0;
+}
+
+#menu { display: none; }
+
+.crumb {
+  flex: 1;
+  min-width: 0;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pager { display: flex; gap: 8px; }
+
+button {
+  font: inherit;
+}
+
+.pager button, #menu {
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.pager button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.doc {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 0;
+  background: var(--card);
+}
+
+/* KaTeX's hidden MathML is position:absolute. Without a positioned
+   ancestor it attaches to the page and leaves a blank scroll region. */
+.katex {
+  position: relative;
+}
+
+.doc-inner {
+  width: 100%;
+  margin: 0;
+  background: var(--card);
+  border: 0;
+  border-radius: 0;
+  padding: 28px 36px 32px;
+  font-family: "Palatino Linotype", "Songti SC", "Noto Serif SC", "Source Han Serif SC", serif;
+  font-size: 17.5px;
+  line-height: 1.85;
+}
+
+.placeholder {
+  margin: 0;
+  padding: 28px 36px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.doc-inner h1 {
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 1.7rem;
+  line-height: 1.35;
+  margin: 0 0 0.6em;
+}
+
+.doc-inner h3 {
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 1.2rem;
+  margin: 1.6em 0 0.5em;
+  color: #24312b;
+}
+
+.doc-inner h4, .doc-inner h5 {
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 1.05rem;
+  margin: 1.3em 0 0.4em;
+}
+
+.doc-inner p { margin: 0.7em 0; }
+.doc-inner ul, .doc-inner ol { padding-left: 1.4em; }
+.doc-inner li { margin: 0.25em 0; }
+.doc-inner strong { color: var(--mark); }
+.doc-inner hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 1.4em 0;
+}
+
+.doc-inner table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+  font-size: 0.92em;
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.doc-inner th, .doc-inner td {
+  border: 1px solid var(--line);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.doc-inner th { background: #f6f1e8; }
+
+.doc-inner code {
+  font-family: Consolas, "Sarasa Mono SC", monospace;
+  font-size: 0.88em;
+  background: #f3eee4;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+
+.doc-inner pre {
+  background: #241f1a;
+  color: #f6f1e8;
+  padding: 14px 16px;
+  border-radius: 10px;
+  overflow: auto;
+}
+
+.doc-inner pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+.doc-inner .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.2em 0;
+}
+
+.empty-filter {
+  color: var(--side-muted);
+  padding: 12px;
+  font-size: 14px;
+}
+
+@media (max-width: 860px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(78vw, 220px);
+    z-index: 3;
+    transform: translateX(-105%);
+    transition: transform 0.18s ease;
+  }
+  .sidebar.open { transform: none; }
+  #menu { display: inline-block; }
+  .doc-inner, .placeholder { padding: 20px 16px 48px; }
+  .topbar { padding: 12px 14px; }
+}
