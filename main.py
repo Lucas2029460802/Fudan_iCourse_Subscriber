@@ -1,5 +1,9 @@
 """iCourse Subscriber — top-level orchestration.
 
+Credentials and course settings are read from the repo-root ``.env`` file
+(see ``.env.example``).  A local run keeps the SQLite database at
+``DB_PATH`` and writes per-course Markdown under ``OVERVIEW_DIR``.
+
 The runtime is split across cooperating components — Scheduler (pools +
 resource monitor), Reporter (centralised logging), PPTPipeline, LectureRunner,
 AudioDownloader.  This file does only orchestration:
@@ -196,6 +200,9 @@ def _drive_lectures(client: ICourseClient, db: Database,
             # PPTPipeline.submit released the cache.
             scheduler.image_cache.discard(sub_id)
             scheduler.audio_downloader.release(sub_id)
+            # Persist notes as soon as this lecture is done, so stopping
+            # the machine mid-run keeps every summary already generated.
+            _write_overview(db, reporter)
 
 
 def _send_email(emailer: Emailer | None, db: Database, reporter: Reporter,
@@ -231,8 +238,9 @@ def _send_email(emailer: Emailer | None, db: Database, reporter: Reporter,
 def _write_overview(db: Database, reporter: Reporter) -> None:
     """Dump every summarized lecture into per-course folders.
 
-    CI then force-pushes that tree to the Overview branch.  A dump
-    failure must not abort the run — the database is already persisted.
+    Called after each lecture so a local run can be interrupted and the
+    notes already generated stay on disk.  A dump failure must not abort
+    the run — the database is already persisted.
     """
     try:
         n_courses, n_files = dump_from_db(db, config.OVERVIEW_DIR)
@@ -296,6 +304,19 @@ def run():
     reporter = Reporter()
     reporter.run_header()
 
+    missing = [
+        name for name, value in (
+            ("StuId", config.STUDENT_ID),
+            ("UISPsw", config.PASSWORD),
+        ) if not value
+    ]
+    if missing:
+        reporter.info(
+            "Missing " + ", ".join(missing)
+            + ". Fill them in the .env file at the repo root, then run: python main.py"
+        )
+        return
+
     if not config.COURSE_IDS and not config.CRAWL_TERM:
         reporter.info(
             "No COURSE_IDS configured. Set COURSE_IDS to process lectures "
@@ -337,6 +358,7 @@ def run():
 
     try:
         all_lectures = _enumerate_lectures(client, db, reporter)
+        _write_overview(db, reporter)
         _drive_lectures(
             client, db, scheduler, transcriber, summarizer, reporter,
             all_lectures, email_items,

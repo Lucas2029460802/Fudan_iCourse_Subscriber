@@ -1,7 +1,49 @@
 import os
 
-STUDENT_ID = os.environ.get("StuId", "")
-PASSWORD = os.environ.get("UISPsw", "")
+
+def _load_dotenv() -> None:
+    """Load the repo-root ``.env`` into the process environment.
+
+    Existing variables win, so a GitHub Actions run that injects secrets
+    is unchanged when no ``.env`` is present. Empty values are skipped so
+    code defaults (paths, thread counts) still apply.
+    """
+    root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    path = os.path.join(root, ".env")
+    if not os.path.isfile(path):
+        return
+    with open(path, encoding="utf-8-sig") as handle:
+        for raw in handle:
+            line = raw.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.startswith("export "):
+                line = line[len("export "):].lstrip()
+            if "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip()
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+                value = value[1:-1]
+            if key and value and key not in os.environ:
+                os.environ[key] = value
+
+
+def _env(*names: str, default: str = "") -> str:
+    """Return the first non-empty environment variable among ``names``."""
+    for name in names:
+        value = os.environ.get(name)
+        if value is not None and value.strip():
+            return value.strip()
+    return default
+
+
+_load_dotenv()
+
+# Accept both the local .env names and the GitHub Actions secret names.
+STUDENT_ID = _env("StuId", "STUID")
+PASSWORD = _env("UISPsw", "UISPSW")
 
 WEBVPN_BASE = "https://webvpn.fudan.edu.cn"
 IDP_BASE = "https://id.fudan.edu.cn"
@@ -31,8 +73,10 @@ MODEL_PROVIDERS: list[dict] = [
         "base_url_env": "DASHSCOPE_BASE_URL",
         "default_base_url": "https://api-inference.modelscope.cn/v1/",
         "models": [
-            "deepseek-ai/DeepSeek-V4-Pro",
-            "deepseek-ai/DeepSeek-V4-Flash"
+            # V4-Pro / V4-Flash currently return "no provider supported".
+            # The dated Pro snapshot and Qwen are the ones ModelScope routes.
+            "deepseek-ai/DeepSeek-V4-Pro-0813",
+            "Qwen/Qwen3.5-397B-A17B",
         ],
     },
     {

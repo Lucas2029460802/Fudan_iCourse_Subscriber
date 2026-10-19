@@ -414,7 +414,7 @@ class Transcriber:
                     f"[Transcriber] Progress: {audio_pos:.0f}s audio,"
                     f" {total_bytes / 1024 / 1024:.1f} MB consumed,"
                     f" {speed_kbps:.1f} KB/s,"
-                    f" {len(segments)} segments so far{_resource_meter("cpu")}",
+                    f" {len(segments)} segments so far{_resource_meter('cpu')}",
                     flush=True,
                 )
                 last_report = now
