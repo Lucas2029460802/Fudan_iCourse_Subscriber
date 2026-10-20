@@ -2,7 +2,6 @@ __pycache__/
 *.pyc
 .env
 data/*
-overview/
 *.mp4
 *.wav
 tests/
