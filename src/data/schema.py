@@ -1,14 +1,10 @@
 """Single source of truth for the SQLite schema.
 
-This module is imported by every Python component that creates or migrates
-the database (Database, sharder, merge_db) so the column list lives in
-exactly one place.
+Database imports this module so the column list lives in one place.
 
-frontend/js/schema.js is a **manual mirror** of these constants.  When you
+frontend/js/schema.js is a manual mirror of these constants.  When you
 change SCHEMA_SQL, LECTURES_MIGRATION_COLUMNS, or PPT_PAGES_MIGRATION_COLUMNS
-here, update that file too — there is no automated sync.  Both run in
-different processes (Python on the CI runner, JS in the browser) and have
-to agree on what tables and columns exist.
+here, update that file too.
 """
 
 from __future__ import annotations
@@ -70,7 +66,7 @@ CREATE TABLE IF NOT EXISTS meta (
 """
 
 # Columns added to ``lectures`` after the v1 schema shipped.  Existing DBs
-# get them via ALTER TABLE in Database._init_tables / merge_db._ensure_schema.
+# get them via ALTER TABLE in Database._init_tables.
 LECTURES_MIGRATION_COLUMNS: list[tuple[str, str]] = [
     ("error_msg", "TEXT"),
     ("error_count", "INTEGER DEFAULT 0"),

@@ -4,9 +4,8 @@ import os
 def _load_dotenv() -> None:
     """Load the repo-root ``.env`` into the process environment.
 
-    Existing variables win, so a GitHub Actions run that injects secrets
-    is unchanged when no ``.env`` is present. Empty values are skipped so
-    code defaults (paths, thread counts) still apply.
+    Existing variables win. Empty values are skipped so code defaults
+    (paths, thread counts) still apply.
     """
     root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
     path = os.path.join(root, ".env")
@@ -41,7 +40,7 @@ def _env(*names: str, default: str = "") -> str:
 
 _load_dotenv()
 
-# Accept both the local .env names and the GitHub Actions secret names.
+# Accept both the .env names and the older uppercase secret names.
 STUDENT_ID = _env("StuId", "STUID")
 PASSWORD = _env("UISPsw", "UISPSW")
 
@@ -168,8 +167,7 @@ DATA_DIR = os.environ.get("DATA_DIR", "data")
 VIDEO_DIR = os.path.join(DATA_DIR, "videos")
 AUDIO_DIR = os.path.join(DATA_DIR, "audio")  # ffmpeg-decoded f32le scratch buffers
 DB_PATH = os.environ.get("DB_PATH", os.path.join(DATA_DIR, "icourse.db"))
-# Local staging dir for per-course Markdown; CI force-pushes this tree
-# to the Overview branch after each run.
+# Per-course Markdown notes, written as each lecture finishes.
 OVERVIEW_DIR = os.environ.get("OVERVIEW_DIR", "overview")
 
 # Sherpa-onnx ASR model directory.  Default: SenseVoice (zh+en+ja+ko+yue, int8).

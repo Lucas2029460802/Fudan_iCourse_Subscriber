@@ -32,8 +32,8 @@ class Database:
         # WAL gets readers (the frontend's read-only export step, or the
         # status badge in long runs) off the writer's lock chain, so the
         # nightly run's many small writes don't block ad-hoc reads.  Pair
-        # with NORMAL sync for ~3-4x write throughput vs FULL — safe enough
-        # given the workflow re-encrypts + uploads after the run completes.
+        # with NORMAL sync for ~3-4x write throughput vs FULL. The local
+        # database file is the persistent copy between runs.
         self.conn.execute("PRAGMA journal_mode=WAL")
         self.conn.execute("PRAGMA synchronous=NORMAL")
         self.conn.row_factory = sqlite3.Row
@@ -225,7 +225,7 @@ class Database:
         Only returns lectures whose ``error_count`` is below *max_errors* —
         a permanently-failing lecture (e.g. ``get-sub-info`` RuntimeError
         for a removed recording) is abandoned after that many attempts
-        rather than clogging every workflow run.
+        rather than clogging every later run.
         """
         query = (
             "SELECT * FROM lectures"

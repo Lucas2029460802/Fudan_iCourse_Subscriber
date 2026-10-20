@@ -1,8 +1,7 @@
 """Write course summaries as Markdown files grouped by course.
 
-Used by the nightly / single-run workflows: after processing, every course
-gets a folder and every summarized lecture becomes a file inside it.  The
-CI job then force-pushes that tree to the ``Overview`` branch.
+After each lecture, and again at the end of a run, every course gets a
+folder and every summarized lecture becomes a file inside it.
 """
 
 from __future__ import annotations
@@ -98,8 +97,7 @@ def dump_from_db(db: "Database", out_dir: str) -> tuple[int, int]:
     """
     os.makedirs(out_dir, exist_ok=True)
 
-    # Drop previously written course folders so removed courses don't linger
-    # when this is the staging dir for a force-push.
+    # Drop previously written course folders so removed courses don't linger.
     for name in os.listdir(out_dir):
         path = os.path.join(out_dir, name)
         if os.path.isdir(path):

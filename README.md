@@ -22,8 +22,6 @@ python scripts/serve_overview.py
 
 打开 http://127.0.0.1:8765 。左侧选择课程和课次，正文会渲染标题、表格和公式。流水线还在写文件时，目录大约每 20 秒刷新一次。
 
-仓库里的 GitHub Actions 工作流 **iCourse Check** 仍是另一条远端路径：每天 19:36（北京时间）定时运行，也可在 Actions 页面手动 Run workflow。下文「快速部署」说明的是这条远端路径。
-
 > [!NOTE]
 > 本项目严禁大规模传播（例如，不准分享到树洞、班级群、大群等地），否则信息办可能随时ban掉该项目。
 > 如果该项目对你有用，请点个**star**⭐作为对作者的鼓励，并将项目**单独**分享给你的好朋友。
@@ -36,9 +34,9 @@ python scripts/serve_overview.py
 1. 登录你的复旦 iCourse 账号（通过 WebVPN）
 2. 检查这两门课是否有新的录播视频
 3. 如果有：提取音频 → 语音识别 → 提取 PPT 图片 → OCR 转写 → AI 生成课程笔记
-4. 将所有新课次的笔记汇总成**一封邮件**发送给你，同时按课程写入 **Overview** 分支：一门课一个文件夹，课次摘要以 Markdown 文件放入对应文件夹
+4. 将所有新课次的笔记汇总成**一封邮件**发送给你，同时按课程写入本地 `overview/`：一门课一个文件夹，课次摘要以 Markdown 文件放入对应文件夹
 
-邮件包含专业排版的 Markdown 渲染内容（含 LaTeX 公式渲染）。切到仓库的 `Overview` 分支也可浏览同一批笔记：每个课程文件夹内有课次列表（`README.md`）和各课次摘要。如果老师提到了作业、考试、签到、组队等重要课程事项，会在笔记开头醒目标注。
+邮件包含专业排版的 Markdown 渲染内容（含 LaTeX 公式渲染）。`overview/` 里每个课程文件夹有课次列表（`README.md`）和各课次摘要。如果老师提到了作业、考试、签到、组队等重要课程事项，会在笔记开头醒目标注。
 
 
 ## 快速部署（5 分钟）
@@ -47,9 +45,9 @@ python scripts/serve_overview.py
 
 点击页面右上角的 **Fork** 按钮，将仓库复制到你的 GitHub 账号下。
 
-### 第 2 步：配置 Secrets
+### 第 2 步：填写 `.env`
 
-进入你 Fork 后的仓库，点击 **Settings → Secrets and variables → Actions → New repository secret**，逐个添加以下 Secret：
+把 `.env.example` 复制为项目根目录的 `.env`，填入下面这些字段：
 
 | Secret 名称 | 必填 | 说明 | 示例 |
 |---|---|---|---|
@@ -92,27 +90,9 @@ python scripts/serve_overview.py
 
 ### 第 6 步：运行
 
-- **自动运行**：默认每天 19:36（北京时间）自动执行
-- **手动触发**：进入仓库 → Actions → **iCourse Check** → Run workflow
-- **立即触发**：也可通过前端页面点击「触发订阅检查」按钮
-- **查看摘要**：邮件送达的同时，也可打开仓库的 **Overview** 分支，按课程文件夹浏览 Markdown 笔记
+在项目根目录执行 `python main.py`。本机计划任务会在每天 19:36 再跑一次。笔记写在 `overview/`，也可以用 `python scripts/serve_overview.py` 在浏览器里看。
 
-首次运行会处理所有已有录播，后续只处理新增课次。已有摘要会一并写入 Overview。
-
-## 前端页面（索引与查看）
-
-![alt text](docs/frontend.png)
-
-本项目自带一个浏览器端加密数据库查看器，部署在 GitHub Pages：
-
-访问 `https://你的用户名.github.io/Fudan_iCourse_Subscriber/`
-
-功能介绍：
-- **浏览器端解密**：输入你的凭据，浏览器用 WebCrypto 解密 sql.js 读取 shard 数据库，凭据不离开本地
-- **按课程/课次浏览**：查看每节课的转录和摘要内容
-- **导出 PDF**：通过 GitHub Actions 触发导出工作流，生成格式化课程笔记 PDF 并邮件发送
-
-> 前端页面需要你手动在 GitHub Pages 设置中开启（Settings → Pages → Source → GitHub Actions），然后触发一次 Deploy Frontend workflow 即可部署。
+首次运行会处理所有已有录播，后续只处理新增课次。
 
 > [!TIP]
 >
@@ -230,29 +210,11 @@ OCR 之后执行 invalid 页面检测：通过特征子串匹配（约 20 条模
 
 PPT 功能区 UI 噪声清洗：PowerPoint 功能区标签（"文件""开始""插入""设计"……）每次截图都被 OCR 识别，占用了 8-18% 的 LLM prompt token。清洗采用按行精确匹配策略，而非子串匹配——例如"选择"在功能区是按钮，在生物学"自然选择"中是正常文本。功能区标签在截图中独占一行，而同一词汇出现在课程内容中时周围有其他文字。100+ 条停用词在 7 节课 × 5 门课数据中零误删。
 
-### 数据库持久化：三环境兼容的加密 + 内容寻址分片
+### 数据库
 
-GitHub Actions 每次在全新容器中运行，无法依赖本地文件系统持久化。解决方案是独立的 `data` 分支，每次运行结束时加密推送数据库，下次运行时拉取解密。
-
-AES-256-CBC + PBKDF2 加密方案需要在三种环境中同时兼容：GitHub Actions shell（openssl CLI）、Python（pycryptodome 库）、浏览器前端（Web Crypto API）。`crypto_box.py` 和 `frontend/js/crypto.js` 保持精确对应——相同的 Salted__ 头部格式、相同的 PBKDF2 迭代次数、相同的 AES-256-CBC 模式。密钥由 `sha256("ICSv2:" + stuid + ":" + uispsw)` 派生。
-
-分片的动机是增量传输。数据库约 20MB，通过 GitHub API 完整拉取会显著增加前端加载时间。按课程分组切割为 ~10MB 的 shard，每个独立加密。前端使用 git blob SHA 作为缓存键存储于 IndexedDB，未变化的 shard 自动跳过网络下载、解密、解压。
-
-并发合并策略：两个 workflow 可能并行执行并同时写入数据库。`merge_db.py` 采用 field-level COALESCE——非空覆盖空、版本号取 MAX、错误字段在成功处理后清零。此策略是 CRDT（Conflict-Free Replicated Data Type）的简化版本，不能解决所有冲突（例如两个 workflow 对同一字段的并发写入），但在实际场景中，同一 lecture 不会被两个 workflow 同时处理，因此冲突概率足够低。
-
-Schema 迁移：新增列时，旧的 shard 与新的 schema 之间存在列数不匹配的兼容性问题。`_migrate_shard_schema()` 在 INSERT 之前对每个 attached shard 执行 PRAGMA table_info 差集检查并通过 ALTER TABLE ADD COLUMN 补齐，将 schema 迁移与 shard 管理解耦。
-
-### 前端：在静态页面中解密远程数据库
-
-前端是运行在 GitHub Pages 上的纯静态单页应用，无后端服务器。它通过 GitHub raw API 拉取位于 `data` 分支的加密 shard，在浏览器中使用 Web Crypto API 解密，并利用 sql.js（SQLite WebAssembly 编译）在内存中构建数据库。
-
-解密凭证（STUID + UISPSW）通过 PBKDF2 派生密钥，不经过网络传输，在浏览器本地内存中完成解密。
-
-订阅编辑器解决了一个特殊的约束：GitHub Actions Secrets API 只支持写入，不支持读取——无法通过 API 获知当前 COURSE_IDS 的值。方案采用三层数据源：数据库 `courses` 表（实际运行过的课程）提供默认订阅状态；localStorage `lastSubscribed` 维护用户前次编辑后的状态；保存时通过 GitHub API 将选择列表写入 `COURSE_IDS` Secret。
+进度、转录和摘要保存在本地 SQLite 文件 `data/icourse.db`。同一台机器上的下次运行直接接着这份文件继续，已完成的课次不会重做。
 
 ### 技术方法总结
 
 - **控制理论**：ResourceMonitor 的双阈值迟滞比较器（deadband control），防止在单个阈值附近震荡。
 - **排队论**：DynamicSemaphore 的可调整并发池，系统过载时减少服务窗口，负载下降后恢复。不影响正在服务的 worker，只影响等待队列。
-- **CRDT 思想**：merge_db.py 的 field-level COALESCE，最终一致的并发合并策略。
-- **内容寻址存储**：前端以 git blob SHA 为 shard 缓存键，相同内容产生相同 SHA 的特性直接复用。
