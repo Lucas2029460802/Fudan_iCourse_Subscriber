@@ -4,12 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>课程笔记</title>
+  <script>
+    try {
+      if (localStorage.getItem("overview-sidebar-collapsed") === "1") {
+        document.documentElement.classList.add("sidebar-collapsed");
+      }
+    } catch (e) {}
+  </script>
   <link rel="stylesheet" href="/vendor/katex/katex.min.css">
   <link rel="stylesheet" href="/app.css">
 </head>
 <body>
   <div class="app">
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
       <div class="side-head">
         <div class="brand">课程笔记</div>
         <input id="search" type="search" placeholder="搜索课次" autocomplete="off">
@@ -18,7 +25,7 @@
     </aside>
     <main class="stage">
       <header class="topbar">
-        <button id="menu" type="button" aria-label="打开目录">目录</button>
+        <button id="menu" type="button" aria-controls="sidebar" aria-expanded="true" aria-label="隐藏目录"><span class="menu-hide">收起</span><span class="menu-show">目录</span></button>
         <div class="crumb" id="crumb">选择一节课</div>
         <div class="pager">
           <button id="prev" type="button">上一节</button>

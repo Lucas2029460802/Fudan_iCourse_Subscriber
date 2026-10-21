@@ -28,7 +28,7 @@ html, body {
 
 .app {
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 220px minmax(0, 1fr);
   height: 100%;
   overflow: hidden;
 }
@@ -39,6 +39,16 @@ html, body {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+@media (min-width: 861px) {
+  .app { transition: grid-template-columns 0.18s ease; }
+  html.sidebar-collapsed .app { grid-template-columns: 0 minmax(0, 1fr); }
+  html.sidebar-collapsed .sidebar {
+    visibility: hidden;
+  }
 }
 
 .side-head {
@@ -119,7 +129,15 @@ html, body {
   top: 0;
 }
 
-#menu { display: none; }
+#menu { display: inline-block; }
+.menu-hide, .menu-show { display: none; }
+@media (min-width: 861px) {
+  html:not(.sidebar-collapsed) .menu-hide { display: inline; }
+  html.sidebar-collapsed .menu-show { display: inline; }
+}
+@media (max-width: 860px) {
+  .menu-show { display: inline; }
+}
 
 .crumb {
   flex: 1;
@@ -275,8 +293,7 @@ button {
     transform: translateX(-105%);
     transition: transform 0.18s ease;
   }
-  .sidebar.open { transform: none; }
-  #menu { display: inline-block; }
+  .sidebar.open { transform: none; visibility: visible; }
   .doc-inner, .placeholder { padding: 20px 16px 48px; }
   .topbar { padding: 12px 14px; }
 }

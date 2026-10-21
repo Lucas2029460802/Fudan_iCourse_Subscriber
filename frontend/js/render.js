@@ -52,10 +52,35 @@ function _restoreFormulas(html, formulas) {
   return html;
 }
 
+// CommonMark ignores **...** when the marker sits between CJK punctuation
+// (。，（）) and a following character. Turn those spans into HTML first.
+function _loosenEmphasis(text) {
+  var fences = [];
+  var stripped = text.replace(/```[\s\S]*?```/g, function (block) {
+    fences.push(block);
+    return "\u0000F" + (fences.length - 1) + "\u0000";
+  });
+  var codes = [];
+  stripped = stripped.replace(/``[\s\S]*?``|`[^`\n]+`/g, function (block) {
+    codes.push(block);
+    return "\u0000C" + (codes.length - 1) + "\u0000";
+  });
+  var out = stripped;
+  out = out.replace(/(?<!\\)\*\*\*(?!\s)([^*\n]*?\S)\*\*\*(?!\*)/g, "<em><strong>$1</strong></em>");
+  out = out.replace(/(?<!\\)\*\*(?!\s)([^*\n]*?\S)\*\*(?!\*)/g, "<strong>$1</strong>");
+  out = out.replace(/(?<!\\)(?<!\*)\*(?!\s)([^*\n]*?\S)\*(?!\*)/g, "<em>$1</em>");
+  out = out.replace(/\u0000C(\d+)\u0000/g, function (_, i) {
+    return codes[+i];
+  });
+  return out.replace(/\u0000F(\d+)\u0000/g, function (_, i) {
+    return fences[+i];
+  });
+}
+
 function _renderMarkdown(mdText) {
   if (!mdText) return "";
   var stashed = _stashFormulas(mdText);
-  var rawHtml = marked.parse(stashed.text, { breaks: true });
+  var rawHtml = marked.parse(_loosenEmphasis(stashed.text), { breaks: true });
   var restored = _restoreFormulas(rawHtml, stashed.formulas);
   return DOMPurify.sanitize(restored);
 }

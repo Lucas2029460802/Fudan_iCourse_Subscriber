@@ -6,6 +6,8 @@ const prevBtn = document.querySelector("#prev");
 const nextBtn = document.querySelector("#next");
 const menuBtn = document.querySelector("#menu");
 const sidebar = document.querySelector(".sidebar");
+const wideQuery = window.matchMedia("(min-width: 861px)");
+const SIDEBAR_KEY = "overview-sidebar-collapsed";
 
 let catalog = { courses: [] };
 let flat = [];
@@ -62,6 +64,21 @@ function escapeAttr(s) {
   return escapeHtml(s);
 }
 
+// CommonMark ignores **...** when the marker sits between CJK punctuation
+// (。，（）) and a following character. Turn those spans into HTML first.
+function loosenEmphasis(text) {
+  const codes = [];
+  const stripped = text.replace(/``[\s\S]*?``|`[^`\n]+`/g, (block) => {
+    codes.push(block);
+    return `\u0000C${codes.length - 1}\u0000`;
+  });
+  let out = stripped;
+  out = out.replace(/(?<!\\)\*\*\*(?!\s)([^*\n]*?\S)\*\*\*(?!\*)/g, "<em><strong>$1</strong></em>");
+  out = out.replace(/(?<!\\)\*\*(?!\s)([^*\n]*?\S)\*\*(?!\*)/g, "<strong>$1</strong>");
+  out = out.replace(/(?<!\\)(?<!\*)\*(?!\s)([^*\n]*?\S)\*(?!\*)/g, "<em>$1</em>");
+  return out.replace(/\u0000C(\d+)\u0000/g, (_, i) => codes[+i]);
+}
+
 function renderMarkdown(md) {
   const fences = [];
   const math = [];
@@ -77,6 +94,7 @@ function renderMarkdown(md) {
     math.push({ tex: tex.trim(), display: false });
     return `${pre}MATH${math.length - 1}END`;
   });
+  text = loosenEmphasis(text);
   text = text.replace(/FENCE(\d+)END/g, (_, i) => fences[+i]);
   let html = marked.parse(text);
   html = html.replace(/<a href="mailto:[^"]*">([\s\S]*?)<\/a>/g, "$1");
@@ -112,6 +130,27 @@ async function openLecture(course, lecture, pushHash) {
     history.replaceState(null, "", `#${encodeURIComponent(course.dir)}/${encodeURIComponent(lecture.file)}`);
   }
   sidebar.classList.remove("open");
+  updateMenuButton();
+}
+
+function sidebarCollapsed() {
+  return document.documentElement.classList.contains("sidebar-collapsed");
+}
+
+function updateMenuButton() {
+  const wide = wideQuery.matches;
+  const open = wide ? !sidebarCollapsed() : sidebar.classList.contains("open");
+  menuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  menuBtn.setAttribute("aria-label", open ? "隐藏目录" : "显示目录");
+  sidebar.toggleAttribute("inert", wide && sidebarCollapsed());
+}
+
+function setSidebarCollapsed(collapsed) {
+  document.documentElement.classList.toggle("sidebar-collapsed", collapsed);
+  try {
+    localStorage.setItem(SIDEBAR_KEY, collapsed ? "1" : "0");
+  } catch (e) {}
+  updateMenuButton();
 }
 
 function indexOfCurrent() {
@@ -173,7 +212,19 @@ nav.addEventListener("click", (event) => {
 search.addEventListener("input", renderNav);
 prevBtn.addEventListener("click", () => step(-1));
 nextBtn.addEventListener("click", () => step(1));
-menuBtn.addEventListener("click", () => sidebar.classList.toggle("open"));
+menuBtn.addEventListener("click", () => {
+  if (wideQuery.matches) {
+    setSidebarCollapsed(!sidebarCollapsed());
+    return;
+  }
+  sidebar.classList.toggle("open");
+  updateMenuButton();
+});
+wideQuery.addEventListener("change", () => {
+  if (wideQuery.matches) sidebar.classList.remove("open");
+  updateMenuButton();
+});
+updateMenuButton();
 
 document.addEventListener("keydown", (event) => {
   if (event.target === search) return;
